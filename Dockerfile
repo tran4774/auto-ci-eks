@@ -1,4 +1,4 @@
-
+#STAGE 1. Build aws-cli for alpine
 ARG ALPINE_VERSION=3.16
 FROM docker.io/python:3.10.5-alpine${ALPINE_VERSION} as builder
 
@@ -13,12 +13,14 @@ RUN apk add --no-cache git unzip groff build-base libffi-dev cmake \
   && unzip -q dist/awscli-exe.zip \
   && aws/install --bin-dir /aws-cli-bin \
   && /aws-cli-bin/aws --version \
-  # reduce image size: remove autocomplete and examples
   && rm -rf /usr/local/aws-cli/v2/current/dist/aws_completer /usr/local/aws-cli/v2/current/dist/awscli/data/ac.index /usr/local/aws-cli/v2/current/dist/awscli/examples \
   && find /usr/local/aws-cli/v2/current/dist/awscli/botocore/data -name examples-1.json -delete 
 
-# #1. Install JDK
+#STAGE 2. Build image Auto CI
+
+#1. Install JDK
 FROM docker.io/bellsoft/liberica-openjdk-alpine-musl:11.0.16
+
 #2. Install Kaniko Excutor
 #2.1. Copy Needed Files from Kaniko Image
 COPY --from=gcr.io/kaniko-project/executor:debug /kaniko/executor /kaniko/executor
@@ -31,9 +33,8 @@ COPY --from=gcr.io/kaniko-project/executor:debug /etc/nsswitch.conf /etc/nsswitc
 #2.2. Setting Enviroment Variables for Kaniko
 ENV HOME=/root USER=root PATH="${PATH}:$JAVA_HOME/bin:/kaniko" SSL_CERT_DIR=/kaniko/ssl/certs DOCKER_CONFIG=/kaniko/.docker/ DOCKER_CREDENTIAL_GCR_CONFIG=/kaniko/.config/gcloud/docker_credential_gcr_config.json
 
-#3. Init Auto Deployment
+#2.3. Init Auto Deployment
 WORKDIR /setup
-# COPY aws/ /setup/aws/
 COPY --from=builder /usr/local/aws-cli/ /usr/local/aws-cli/
 COPY --from=builder /aws-cli-bin/ /usr/local/bin/
 COPY setup.sh ./
