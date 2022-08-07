@@ -2,7 +2,7 @@
 
 curl -o "chart_repo.tar.gz" $CHART_GIT_ARCHIVED_URL && \
 mkdir workspace && tar xzf chart_repo.tar.gz -C workspace --strip-components 1 && \
-echo -e "[default]\naws_access_key_id = $AWS_ACCESS_KEY_ID \naws_secret_access_key = $AWS_SECRET_ACCESS_KEY\n" > /root/.aws/credentials && \
+echo "[default]\naws_access_key_id = $AWS_ACCESS_KEY_ID \naws_secret_access_key = $AWS_SECRET_ACCESS_KEY\n" > /root/.aws/credentials && \
 aws eks --region $AWS_DEFAULT_REGION --profile default update-kubeconfig --name $AWS_EKS_NAME
 
 cd ./workspace
